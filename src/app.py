@@ -15,7 +15,7 @@ app = Flask(__name__)
 def get_node_availability():
     host_port = node.get_socket()
     response = {
-        'message': f"Node on http://{host_port} is available!"
+        'message': f'Node on http://{host_port} is available!'
     }
     return jsonify(response), 200
 
@@ -36,18 +36,18 @@ def init_node_from_peer():
         return jsonify(response), 400
 
     try:
-        response = requests.post(url=f'http://{peer}/peer/new', json={'peer': node.get_socket()} ,timeout=config.CONNECTION_TIMEOUT)
+        response = requests.post(url=f'http://{peer}/peer/new', json={'peer': node.get_socket()} ,timeout=config.CONNECTION_TIMEOUT_IN_SECONDS)
         if response.status_code == 201:
             node.peers.add(peer)
             if node.clone_from_peer(peer):
                 response = {
-                    'message': f"Successful initialization from http://{peer}"
+                    'message': f'Successful initialization from http://{peer}'
                 }
                 return jsonify(response), 201
     except Exception as e:
         print(e)
         response = {
-            'error': f"Failed to initialize from http://{peer}"
+            'error': f'Failed to initialize from http://{peer}'
         }
         return jsonify(response), 400
 
@@ -59,13 +59,14 @@ def get_node_replica():
     users = node.get_users()
     transaction_pool = node.get_transaction_pool()
     user_balence_pool = node.get_user_balence_pool()
+    blockchain = node.get_full_chain()
     response = {
         'host_port': host_port,
         'peers': peers,
         'users': users,
         'transaction_pool': transaction_pool,
         'user_balence_pool': user_balence_pool,
-        'blockchain': None #TODO
+        'blockchain': blockchain
     }
     return jsonify(response), 200
 
@@ -91,7 +92,7 @@ def post_peer_registration():
 
     if node.register_peer(peer=body.get('peer')):
         response = {
-            'message': "Your peer registration is successful!"
+            'message': 'Your peer registration is successful!'
         }
         return jsonify(response), 201
     else:
@@ -131,7 +132,7 @@ def post_user_registration():
 
     if node.register_user(user=body.get('username'), password=body.get('password')):
         response = {
-            'message': "Your user registration is successful!"
+            'message': 'Your user registration is successful!'
         }
         return jsonify(response), 201
     else:
@@ -157,9 +158,10 @@ def get_user_balence():
         }
         return jsonify(response), 401
 
+    balence_from_blockchain = node.get_last_block()['user_balences'].get(user)
     balence_from_pool = node.get_user_balence_pool().get(user)
     response = {
-        'balence_from_blockchain': None, #TODO
+        'balence_from_blockchain': balence_from_blockchain,
         'balence_from_pool': balence_from_pool
     }
     return jsonify(response), 200
@@ -224,11 +226,62 @@ def post_user_transaction():
         return jsonify(response), 400
     else:
         response = {
-            'message': "Your transaction will be added to Blockchain!",
+            'message': 'Your transaction will be added to Blockchain!',
             'transaction': transaction
         }
         return jsonify(response), 201
 
+
+
+@app.route('/blockchain/chain', methods=['GET'])
+def get_full_blockchain():
+    blockchain = node.get_full_chain()
+    response = {
+        'blockchain': blockchain,
+        'length': len(blockchain)
+    }
+    return jsonify(response), 200
+
+
+@app.route('/blockchain/last_block', methods=['GET'])
+def get_last_block_blockchain():
+    last_block = node.get_last_block()
+    response = {
+        'last_block': last_block
+    }
+    return jsonify(response), 200
+
+
+@app.route('/blockchain/mine', methods=['POST'])
+def mine_new_block():
+    body = request.get_json()
+    if body is None or body.get('username') is None or body.get('password') is None:
+        response = {
+            'error': 'Invalid request body'
+        }
+        return jsonify(response), 400
+    user = body.get('username')
+    password = body.get('password')
+    if not node.authenticate_user(user=user, password=password):
+        response = {
+            'error': 'User authentication failed'
+        }
+        return jsonify(response), 401
+
+    new_block = node.mine(user)
+
+    if new_block is None:
+        response = {
+            'error': 'Mining aborted'
+        }
+        return jsonify(response), 500
+    else:
+        response = {
+            'message': 'New block forged',
+            'mining_reward': config.MINING_REWARD,
+            'new_block': new_block
+        }
+        return jsonify(response), 201
 
 
 
@@ -238,7 +291,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', default=True, type=utility.str2bool, help='enable flask debug mode')
     args = parser.parse_args()
 
-    host = '127.0.0.1'
+    host = '127.0.0.1' #TODO
     port = args.port
     debug = args.debug
     node = Node(host=host, port=port)

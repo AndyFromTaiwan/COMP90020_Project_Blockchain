@@ -1,10 +1,16 @@
+import config
+import hashlib
+import json
+from time import time
+from uuid import uuid4
+
+
 class Blockchain(object):
-    def __init__(self):
+    def __init__(self, node):
+        self.node = node
         self.chain = []
-
-        # Create the genesis block
-        #self.new_block(previous_hash=1, proof=100)
-
+        genesis_block = self.create_new_block()
+        self.chain.append(genesis_block)
 
 
     def get_chain(self):
@@ -12,50 +18,89 @@ class Blockchain(object):
 
     def get_last_block(self):
         return self.chain[-1];
-   
 
 
+    @staticmethod
+    def hash(block):        
+        block_string = json.dumps(block, sort_keys=True).encode()
+        return hashlib.sha256(block_string).hexdigest()
 
-    def new_block(self, proof, previous_hash=None):
-        # Creates a new Block and adds it to the chain
-        """
-        Create a new Block in the Blockchain
-        :param proof: <int> The proof given by the Proof of Work algorithm
-        :param previous_hash: (Optional) <str> Hash of previous Block
-        :return: <dict> New Block
-        """
+
+    def create_new_block(self, miner=None):
+        transactions = list()
+        if miner is not None:
+            transactions.append(self.create_mining_reward(miner))
+            transactions += list(self.node.transaction_pool.values())
+        user_balences = self.node.user_balence_pool.copy()
+        previous_block_hash = self.hash(self.get_last_block()) if len(self.chain)>0 else None
 
         block = {
-            'index': len(self.chain) + 1,
-            'timestamp': time(),
-            'transactions': None,
-            'user_balences': None,
-            'proof': proof,
-            'previous_hash': previous_hash or self.hash(self.chain[-1]),
+            'index': len(self.chain),
+            'previous_block_hash': previous_block_hash,
+            'timestamp': int(time()),
+            'transactions': transactions,
+            'user_balences': user_balences,
+            'nonce': 0,
+            'target_bits': config.TARGET_BITS
+        }
+        return block
+
+
+    def mine(self, miner):
+        self.node.user_balence_pool[miner] += config.MINING_REWARD
+        candidate_block = self.create_new_block(miner)
+
+        while self.is_valid_nonce(candidate_block, config.TARGET_BITS) is False:
+            candidate_block['nonce'] += 1
+
+        self.node.transaction_pool = dict()
+        self.chain.append(candidate_block)
+        return candidate_block
+
+    @staticmethod
+    def create_mining_reward(miner):
+        return {
+            'transaction_id': str(uuid4()),
+            'sender': 'SYSTEM',
+            'recipient': miner, 
+            'amount': config.MINING_REWARD,
+            'timestamp': int(time())
         }
 
-        # Reset the current list of transactions
 
-        self.chain.append(block)
-        return block
-
-
-    def add_block(self, block, peers):
-        return True
+    def is_valid_nonce(self, block, target_bits):
+        return self.hash(block)[ : target_bits] == ''.zfill(target_bits)
 
 
-    def mine(self, transcations_pool, balence_pool):
-        #TODO
-        block = {}
-        return block
 
 
+
+
+
+
+    def add_cahin(self,chain):
+        if len(chain) <= len(self.chain):
+            return False
+        if verify_chain(chain):
+           self.chain = chain
+           #TODO sync all pools
+           return True
+        return False
+
+    def verify_chain(self, chain):
+        for i in range(1, len(chain)):
+           if chain[i].get('previous_block_hash') != self.hash(chain[i-1]):
+              return False
+           if self.is_valid_nonce(chain[i], config.TARGET_BITS) is False:
+              return False
+        return True;
+
+
+    '''
     def verify_block(self, block):
         return True;
 
-    def verify_chain(self, block):
-        return True;
-
-
-
+    def add_block(self, block):
+        return True
+    '''
 

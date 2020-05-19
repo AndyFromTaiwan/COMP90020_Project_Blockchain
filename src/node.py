@@ -5,22 +5,22 @@ import requests
 from time import time
 from uuid import uuid4
 
-
+# TODO all broadcast functions
 class Node(object):
     def __init__(self, host, port):
-        self.socket = host+":"+str(port)
+        self.socket = host+':'+str(port)
         self.peers = set()
         self.users = dict()
         self.transaction_pool = dict()
         self.user_balence_pool = dict()
-        self.blockchain = Blockchain()
+        self.blockchain = Blockchain(self)
 
     def get_socket(self):
        return self.socket
 
     def clone_from_peer(self, peer):
         try:
-            response = requests.get(url=f'http://{peer}/node/clone', timeout=config.CONNECTION_TIMEOUT)
+            response = requests.get(url=f'http://{peer}/node/clone', timeout=config.CONNECTION_TIMEOUT_IN_SECONDS)
             if response.status_code == 200:
                 replica = response.json()  
                 for p in replica.get('peers'):
@@ -40,7 +40,7 @@ class Node(object):
     def register_peer(self, peer):
         if peer!=self.socket:
             try:
-                response = requests.get(url=f'http://{peer}/', timeout=config.CONNECTION_TIMEOUT)
+                response = requests.get(url=f'http://{peer}/', timeout=config.CONNECTION_TIMEOUT_IN_SECONDS)
                 if response.status_code == 200:
                     self.broadcast_peer(peer)
                     self.peers.add(peer)
@@ -70,7 +70,7 @@ class Node(object):
     def add_user(self, user, password):
         if user not in self.users:
             self.users[user] = password
-            self.user_balence_pool[user] = config.NEW_USER_REWARD #TODO: coinbase transaction?
+            self.user_balence_pool[user] = config.NEW_USER_REWARD
 
     def authenticate_user(self, user, password):
         return self.users.get(user) == password
@@ -98,7 +98,7 @@ class Node(object):
         recipient = transaction.get('recipient')
         amount = transaction.get('amount')
         if self.verify_transaction(sender, recipient, amount):
-            self.transaction_pool[transaction_id] = transaction
+            self.transaction_pool[transaction_id] = transaction  
             self.update_user_balence_pool(sender, recipient, amount)
 
     def verify_transaction(self, sender, recipient, amount):
@@ -128,35 +128,30 @@ class Node(object):
         self.user_balence_pool[recipient] = self.user_balence_pool.get(recipient)+amount
 
 
-
-
-
-    
-
     def get_full_chain(self):
         return self.blockchain.get_chain()
 
     def get_last_block(self):
         return self.blockchain.get_last_block()
 
-    
-    def broadcast_block(self, block):
-        pass
+    def mine(self, miner):
+        new_block = self.blockchain.mine(miner)
+        if new_block is not None:
+            new_blockchain = self.blockchain.get_chain()
+            self.broadcast_chain(new_blockchain)
+        return new_block
+
+    def add_chain(self, chain):
+        self.add_cahin(chain)
 
     def broadcast_chain(self, chain):
         pass
-    
+
+    '''
     def add_block(self, block):
-        self.add_block(block, self.peers)
+        self.add_block(block)
 
-    def add_chain(self, chain):
-        self.add_block(chain, self.peers)
-
- 
-    def mine(self):
-        new_block = self.blockchain.mine(self.transcations_pool, self.balence_pool)
-        if new_block is not None:
-            self.broadcast_block(new_block)
-    
-    
+    def broadcast_block(self, block):
+        pass
+    '''
 
