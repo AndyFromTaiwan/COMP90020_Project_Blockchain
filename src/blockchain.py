@@ -19,6 +19,9 @@ class Blockchain(object):
     def get_last_block(self):
         return self.chain[-1];
 
+    def set_chain(self, chain):
+        self.chain = chain
+
 
     @staticmethod
     def hash(block):        
@@ -30,7 +33,7 @@ class Blockchain(object):
         transactions = list()
         if miner is not None:
             transactions.append(self.create_mining_reward(miner))
-            transactions += list(self.node.transaction_pool.values())
+            transactions += self.node.get_transaction_pool_as_list()
         user_balences = self.node.user_balence_pool.copy()
         previous_block_hash = self.hash(self.get_last_block()) if len(self.chain)>0 else None
 
@@ -53,7 +56,7 @@ class Blockchain(object):
         while self.is_valid_nonce(candidate_block, config.TARGET_BITS) is False:
             candidate_block['nonce'] += 1
 
-        self.node.transaction_pool = dict()
+        self.node.reset_transaction_pool()
         self.chain.append(candidate_block)
         return candidate_block
 
@@ -72,20 +75,12 @@ class Blockchain(object):
         return self.hash(block)[ : target_bits] == ''.zfill(target_bits)
 
 
-
-
-
-
-
-
-    def add_cahin(self,chain):
-        if len(chain) <= len(self.chain):
+    def verify_block(self, block):
+        if block.get('previous_block_hash') != self.hash(self.chain[-1]):
             return False
-        if verify_chain(chain):
-           self.chain = chain
-           #TODO sync all pools
-           return True
-        return False
+        if self.is_valid_nonce(block, config.TARGET_BITS) is False:
+            return False
+        return True;
 
     def verify_chain(self, chain):
         for i in range(1, len(chain)):
@@ -96,11 +91,23 @@ class Blockchain(object):
         return True;
 
 
-    '''
-    def verify_block(self, block):
-        return True;
+    def add_cahin(self,chain):
+        if len(chain) <= len(self.chain):
+            return False
+        last_block = chain[-1]
+        if self.add_block(last_block):
+            return True
+        elif self.verify_chain(chain):
+            self.chain = chain
+            self.node.reset_transaction_pool()
+            self.node.user_balence_pool = last_block.get('user_balences')
+            return True
+        return False
 
     def add_block(self, block):
-        return True
-    '''
-
+        if block.get('index') == len(self.chain) and self.verify_block(block):
+            self.chain.append(block)
+            self.node.reset_transaction_pool()
+            self.node.user_balence_pool = block.get('user_balences')
+            return True
+        return False

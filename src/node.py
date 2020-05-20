@@ -5,7 +5,7 @@ import requests
 from time import time
 from uuid import uuid4
 
-# TODO all broadcast functions
+
 class Node(object):
     def __init__(self, host, port):
         self.socket = host+':'+str(port)
@@ -28,6 +28,7 @@ class Node(object):
                 self.users = replica.get('users')
                 self.transaction_pool = replica.get('transaction_pool')
                 self.user_balence_pool = replica.get('user_balence_pool')
+                self.blockchain.set_chain(replica.get('blockchain'))
                 return True
         except Exception as e:
             print(e)
@@ -52,9 +53,16 @@ class Node(object):
     def add_peer(self, peer):
         if peer!=self.socket:
             self.peers.add(peer)
+            return True
+        return False
 
     def broadcast_peer(self, peer):
-        pass
+        json = { 'peer': peer }
+        for node in self.peers:
+            try:
+                response = requests.post(url=f'http://{node}/peer/add', json=json , timeout=config.CONNECTION_TIMEOUT_IN_SECONDS)
+            except Exception as e:
+                print(e)
 
 
     def get_users(self):
@@ -71,16 +79,29 @@ class Node(object):
         if user not in self.users:
             self.users[user] = password
             self.user_balence_pool[user] = config.NEW_USER_REWARD
+            return True
+        return False
 
     def authenticate_user(self, user, password):
         return self.users.get(user) == password
 
     def broadcast_user(self, user, password):
-        pass
+        json = { 'username': user, 'password': password }
+        for node in self.peers:
+            try:
+                response = requests.post(url=f'http://{node}/user/add', json=json , timeout=config.CONNECTION_TIMEOUT_IN_SECONDS)
+            except Exception as e:
+                print(e)
 
 
     def get_transaction_pool(self):
         return self.transaction_pool
+
+    def get_transaction_pool_as_list(self):
+        return list(self.transaction_pool.values())
+
+    def reset_transaction_pool(self):
+        self.transaction_pool = dict()
 
     def start_transaction(self, sender, recipient, amount):
         if self.verify_transaction(sender, recipient, amount):
@@ -97,9 +118,14 @@ class Node(object):
         sender = transaction.get('sender')
         recipient = transaction.get('recipient')
         amount = transaction.get('amount')
+        if transaction_id is None or sender is None or recipient is None or amount is None:
+            return False
+
         if self.verify_transaction(sender, recipient, amount):
             self.transaction_pool[transaction_id] = transaction  
             self.update_user_balence_pool(sender, recipient, amount)
+            return True
+        return False
 
     def verify_transaction(self, sender, recipient, amount):
        if self.user_balence_pool.get(sender) is None or self.user_balence_pool.get(recipient) is None:
@@ -117,15 +143,20 @@ class Node(object):
         }
 
     def broadcast_transaction(self, transaction):
-        pass
+        json = { 'transaction': transaction }
+        for node in self.peers:
+            try:
+                response = requests.post(url=f'http://{node}/transaction/add', json=json , timeout=config.CONNECTION_TIMEOUT_IN_SECONDS)
+            except Exception as e:
+                print(e)
 
 
     def get_user_balence_pool(self):
         return self.user_balence_pool
 
     def update_user_balence_pool(self, sender, recipient, amount):
-        self.user_balence_pool[sender] = self.user_balence_pool.get(sender)-amount
-        self.user_balence_pool[recipient] = self.user_balence_pool.get(recipient)+amount
+        self.user_balence_pool[sender] = self.user_balence_pool.get(sender) - amount
+        self.user_balence_pool[recipient] = self.user_balence_pool.get(recipient) + amount
 
 
     def get_full_chain(self):
@@ -142,14 +173,19 @@ class Node(object):
         return new_block
 
     def add_chain(self, chain):
-        self.add_cahin(chain)
+        return self.blockchain.add_cahin(chain)
 
     def broadcast_chain(self, chain):
-        pass
+        json = { 'blockchain': chain }
+        for node in self.peers:
+            try:
+                response = requests.post(url=f'http://{node}/blockchain/add', json=json , timeout=config.CONNECTION_TIMEOUT_IN_SECONDS)
+            except Exception as e:
+                print(e)
 
     '''
     def add_block(self, block):
-        self.add_block(block)
+        return self.blockchain.add_block(block)
 
     def broadcast_block(self, block):
         pass

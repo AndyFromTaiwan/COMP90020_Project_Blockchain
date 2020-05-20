@@ -102,6 +102,27 @@ def post_peer_registration():
         return jsonify(response), 400
 
 
+@app.route('/peer/add', methods=['POST'])
+def add_new_peer():
+    body = request.get_json()
+    if body is None or body.get('peer') is None:
+        response = {
+            'error': 'Invalid request body'
+        }
+        return jsonify(response), 400
+
+    if node.add_peer(peer=body.get('peer')):
+        response = {
+            'message': 'Added this peer node successfully!'
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'message': 'Peer node not added'
+        }
+        return jsonify(response), 201
+
+
 
 @app.route('/user/profiles', methods=['GET'])
 def get_all_user_profile():
@@ -140,6 +161,28 @@ def post_user_registration():
             'error': 'Duplicated registration'
         }
         return jsonify(response), 400
+
+
+@app.route('/user/add', methods=['POST'])
+def add_new_user():
+    body = request.get_json()
+    if body is None or body.get('username') is None or body.get('password') is None:
+        response = {
+            'error': 'Invalid request body'
+        }
+        return jsonify(response), 400
+
+    if node.add_user(user=body.get('username'), password=body.get('password')):
+        response = {
+            'message': 'Added this user successfully!'
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'message': 'User not added'
+        }
+        return jsonify(response), 201
+
 
 
 @app.route('/user/balence', methods=['POST'])
@@ -187,6 +230,15 @@ def get_transaction_pool():
     return jsonify(response), 200
 
 
+@app.route('/transaction/list', methods=['GET'])
+def get_uncommitted_transactions():
+    uncommitted_transactions = node.get_transaction_pool_as_list()
+    response = {
+        'uncommitted_transactions': uncommitted_transactions
+    }
+    return jsonify(response), 200
+
+
 @app.route('/transaction/new', methods=['POST'])
 def post_user_transaction():
     body = request.get_json()
@@ -228,6 +280,26 @@ def post_user_transaction():
         response = {
             'message': 'Your transaction will be added to Blockchain!',
             'transaction': transaction
+        }
+        return jsonify(response), 201
+
+
+@app.route('/transaction/add', methods=['POST'])
+def add_new_transaction():
+    body = request.get_json()
+    if body is None or body.get('transaction') is None:
+        response = {
+            'error': 'Invalid request body'
+        }
+        return jsonify(response), 400
+    if node.add_transaction(transaction=body.get('transaction')):
+        response = {
+            'message': 'Added this transaction successfully!'
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'message': 'Transaction not added'
         }
         return jsonify(response), 201
 
@@ -280,6 +352,27 @@ def mine_new_block():
             'message': 'New block forged',
             'mining_reward': config.MINING_REWARD,
             'new_block': new_block
+        }
+        return jsonify(response), 201
+
+
+@app.route('/blockchain/add', methods=['POST'])
+def add_new_blockchain():
+    body = request.get_json()
+    if body is None or body.get('blockchain') is None:
+        response = {
+            'error': 'Invalid request body'
+        }
+        return jsonify(response), 400
+
+    if node.add_chain(chain=body.get('blockchain')):
+        response = {
+            'message': 'Update blockchain successfully!'
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'message': 'Blockchain node not updated'
         }
         return jsonify(response), 201
 
