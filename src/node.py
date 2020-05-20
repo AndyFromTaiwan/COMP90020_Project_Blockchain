@@ -118,9 +118,6 @@ class Node(object):
         sender = transaction.get('sender')
         recipient = transaction.get('recipient')
         amount = transaction.get('amount')
-        if transaction_id is None or sender is None or recipient is None or amount is None:
-            return False
-
         if self.verify_transaction(sender, recipient, amount):
             self.transaction_pool[transaction_id] = transaction  
             self.update_user_balence_pool(sender, recipient, amount)
@@ -165,6 +162,9 @@ class Node(object):
     def get_last_block(self):
         return self.blockchain.get_last_block()
 
+    def get_committed_user_balences(self):
+        return self.blockchain.get_committed_user_balences()
+
     def mine(self, miner):
         new_block = self.blockchain.mine(miner)
         if new_block is not None:
@@ -190,4 +190,3 @@ class Node(object):
     def broadcast_block(self, block):
         pass
     '''
-

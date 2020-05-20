@@ -7,7 +7,6 @@ import threading
 import utility
 
 
-# Instantiate our Node
 app = Flask(__name__)
 
 
@@ -184,7 +183,6 @@ def add_new_user():
         return jsonify(response), 201
 
 
-
 @app.route('/user/balence', methods=['POST'])
 def get_user_balence():
     body = request.get_json()
@@ -201,7 +199,7 @@ def get_user_balence():
         }
         return jsonify(response), 401
 
-    balence_from_blockchain = node.get_last_block()['user_balences'].get(user)
+    balence_from_blockchain = node.get_committed_user_balences().get(user)
     balence_from_pool = node.get_user_balence_pool().get(user)
     response = {
         'balence_from_blockchain': balence_from_blockchain,

@@ -19,6 +19,9 @@ class Blockchain(object):
     def get_last_block(self):
         return self.chain[-1];
 
+    def get_committed_user_balences(self):
+        return json.loads(self.chain[-1].get('user_balences'))
+
     def set_chain(self, chain):
         self.chain = chain
 
@@ -34,7 +37,7 @@ class Blockchain(object):
         if miner is not None:
             transactions.append(self.create_mining_reward(miner))
             transactions += self.node.get_transaction_pool_as_list()
-        user_balences = self.node.user_balence_pool.copy()
+        user_balences = json.dumps(self.node.user_balence_pool, sort_keys=True)
         previous_block_hash = self.hash(self.get_last_block()) if len(self.chain)>0 else None
 
         block = {
@@ -100,7 +103,7 @@ class Blockchain(object):
         elif self.verify_chain(chain):
             self.chain = chain
             self.node.reset_transaction_pool()
-            self.node.user_balence_pool = last_block.get('user_balences')
+            self.node.user_balence_pool = self.get_committed_user_balences()
             return True
         return False
 
@@ -108,6 +111,6 @@ class Blockchain(object):
         if block.get('index') == len(self.chain) and self.verify_block(block):
             self.chain.append(block)
             self.node.reset_transaction_pool()
-            self.node.user_balence_pool = block.get('user_balences')
+            self.node.user_balence_pool = self.get_committed_user_balences()
             return True
         return False
