@@ -18,7 +18,14 @@ class Node(object):
         self.raft = None
         self.uncommitted_user = None
         self.uncommitted_transaction = None
+        # broadcast_ methods: for broadcast user requests by sending message to raft module
+        # add_* methods: for verifying changes validity and storing changes
+        # commit_* methods: for committing all changes and updating all relating status
 
+
+    ###############
+    # Node setting
+    ###############
 
     def set_raft(self, raft):
         self.raft = raft
@@ -26,6 +33,7 @@ class Node(object):
     def get_socket(self):
        return self.socket
 
+    # Initialization node by replicating from ann existing peer node
     def clone_from_peer(self, peer):
         try:
             response = requests.get(url=f'http://{peer}/node/clone', timeout=config.CONNECTION_TIMEOUT_IN_SECONDS)
@@ -42,6 +50,10 @@ class Node(object):
             print(e)
         return False
 
+
+    ####################
+    # P2P Network Peers
+    ####################
 
     def get_peers(self):
        return list(self.peers)
@@ -72,6 +84,10 @@ class Node(object):
             except Exception as e:
                 print(e)
 
+
+    ###############
+    # Users
+    ###############
 
     def get_users(self):
         return self.users
@@ -105,6 +121,10 @@ class Node(object):
     def authenticate_user(self, user, password):
         return self.users.get(user) == password
 
+
+    #############################
+    # Transactions and Balences
+    ##############################
 
     def get_transaction_pool(self):
         return self.transaction_pool
@@ -174,6 +194,10 @@ class Node(object):
         self.user_balence_pool[sender] = self.user_balence_pool.get(sender) - amount
         self.user_balence_pool[recipient] = self.user_balence_pool.get(recipient) + amount
 
+
+    ###############
+    # Blockchain
+    ###############
 
     def get_full_chain(self):
         return self.blockchain.get_chain()

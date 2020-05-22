@@ -5,6 +5,8 @@ from time import time
 from uuid import uuid4
 
 
+# Bitcoin-liked blockchain implementation 
+# using the Proof-of-Work consensus algorithm
 class Blockchain(object):
     def __init__(self, node):
         self.node = node
@@ -52,13 +54,17 @@ class Blockchain(object):
         return block
 
 
+    # Proof of work algorithm: A block is mined until SHA256 hash 
+    # of this block matching target bits
     def mine(self, miner):
         self.node.user_balence_pool[miner] += config.MINING_REWARD
         candidate_block = self.create_new_block(miner)
 
+        # Proof of work: Mining a block by adjusting the nonce parameter
         while self.is_valid_nonce(candidate_block, config.TARGET_BITS) is False:
             candidate_block['nonce'] += 1
 
+        # Update pools after mining a new block and committing transactions
         self.node.reset_transaction_pool()
         self.chain.append(candidate_block)
         return candidate_block
@@ -77,7 +83,8 @@ class Blockchain(object):
     def is_valid_nonce(self, block, target_bits):
         return self.hash(block)[ : target_bits] == ''.zfill(target_bits)
 
-
+    # A block is valid if hash of this block matching thr target bits
+    # and the previous_block_hash field equals to the hash of the previous block
     def verify_block(self, block):
         if block.get('previous_block_hash') != self.hash(self.chain[-1]):
             return False
@@ -93,7 +100,7 @@ class Blockchain(object):
               return False
         return True;
 
-
+    # Proof of work: Reaching consensus on longest valid chain
     def add_cahin(self,chain):
         if len(chain) <= len(self.chain):
             return False
@@ -107,6 +114,7 @@ class Blockchain(object):
             return True
         return False
 
+    # Add the block to tail of chain if its valid
     def add_block(self, block):
         if block.get('index') == len(self.chain) and self.verify_block(block):
             self.chain.append(block)

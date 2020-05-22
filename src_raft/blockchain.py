@@ -5,11 +5,12 @@ from time import time
 from uuid import uuid4
 
 
+# Blockchain implementation for raft consensus algorithm
 class Blockchain(object):
     def __init__(self, node):
         self.node = node
         self.chain = []
-        # Raft
+        # Raft: for uncommited changes
         self.uncommitted_user_balence_pool = dict()
         self.uncommitted_chain = None
         genesis_block = self.create_new_block()
@@ -53,7 +54,9 @@ class Blockchain(object):
         return block
 
 
+    # Mining a new block and committing all transactions
     def mine(self, miner):
+        # Stores uncomitted changes
         self.uncommitted_user_balence_pool = self.node.user_balence_pool.copy()
         self.uncommitted_user_balence_pool[miner] += config.MINING_REWARD
         candidate_block = self.create_new_block(miner)
@@ -70,6 +73,7 @@ class Blockchain(object):
         }
 
 
+    # A block is valid if the previous_block_hash field equals to the hash of the previous block
     def verify_block(self, block):
         if block.get('index') == len(self.chain) and block.get('previous_block_hash') == self.hash(self.chain[-1]):
             return True
@@ -81,11 +85,12 @@ class Blockchain(object):
               return False
         return True;
 
-
+    # Verifird the whole chain. If its valid, stores the changes
     def add_cahin(self,chain):
         if len(chain) <= len(self.chain):
             return False
         last_block = chain[-1]
+        # Stores uncomitted changes
         if self.verify_block(last_block):
             self.uncommitted_chain = chain
             return True
@@ -94,6 +99,7 @@ class Blockchain(object):
             return True
         return False
 
+    # Committing all changes on blockchain and updatig all status
     def commit_chain(self):
         if self.uncommitted_user_balence_pool is not None and self.uncommitted_chain is not None:
             self.chain = self.uncommitted_chain

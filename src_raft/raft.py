@@ -22,7 +22,7 @@ class Raft(object):
         # Volatile state on all servers:
         self.commit_index = 0
 
-        # timeout
+        # timeout and leader election settings
         self.election_timeout_interval = ( config.RAFT_ELECTION_TIMEOUT_LOWER_IN_MS,
                                            config.RAFT_ELECTION_TIMEOUT_UPPER_IN_MS )
 
@@ -47,6 +47,7 @@ class Raft(object):
     def get_next_election_start(self):
         return time.time() + random.randint(*self.election_timeout_interval)/1000
 
+    # messaging to raft module from outside
     def handle_message(self, message):
         self.message_queue.put(message)
 
@@ -65,6 +66,7 @@ class Raft(object):
         self.voter_ids = set()
 
 
+    # for raft follower to handle leader election vote request
     def handle_vote_request(self, message):
         json = {
             'type': 'vote_response',
@@ -79,6 +81,7 @@ class Raft(object):
         last_log_term = message['term']
 
         if self.voted_for is None or self.voted_for == candidate_id:
+            # reject if this candidate is not in the known newest log updating status
             if self.current_term <= last_log_term and self.commit_index <= last_log_index:
                 self.voted_for = message['src_id']
                 self.current_term = last_log_term
@@ -98,6 +101,7 @@ class Raft(object):
         if message['type'] in self.client_message_types:
             return
 
+        # updating the newest known election term from message
         if message['term'] > self.current_term:
             print('[START] message term > current term. Switch to a follower')
             self.role = 'follower'
@@ -165,6 +169,7 @@ class Raft(object):
                     self.switch_from_candidate_to_follower()
                 elif message['vote_granted']:
                     self.voter_ids.add(message['src_id'])
+                    # Receiving majority votes: reaching consensus on leader election 
                     if 1+len(self.voter_ids) > (len(peers)+1)//2:
                         print('[CANDIDATE] Win the leader election. Switch to a leader')
                         self.role = 'leader'
@@ -228,6 +233,7 @@ class Raft(object):
                 elif message['type'] == 'broadcast_chain':
                     endpoint = '/blockchain/add'
 
+                # broadcast user requests on changes
                 for peer in peers:
                     json['dst_id'] = peer
                     try:
@@ -236,6 +242,8 @@ class Raft(object):
                             agree_count += 1
                     except Exception as e:
                         print(e)
+
+                # reaching consensus on changes frmm majority agreement among peers, then committing the changes
                 if agree_count > len(peers)//2:
                     json['type'] = 'commit_log'
                     for peer in peers:
@@ -250,10 +258,13 @@ class Raft(object):
     def run(self):
         while True:
             try:
+                # reads an incomming message from buffer
                 try:
                     message =  None if self.message_queue.empty() else self.message_queue.get()
                 except Exception as e:
                     print(e)
+
+                # updating status and playing raft roles
                 self.start_an_iteration(message)
                 if self.role == 'follower':
                     self.act_as_a_follower(message)

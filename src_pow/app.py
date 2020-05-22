@@ -8,6 +8,11 @@ import utility
 
 app = Flask(__name__)
 
+###################
+# Node APIs
+###################
+
+# Check node availability
 @app.route('/', methods=['GET'])
 def get_node_availability():
     host_port = node.get_socket()
@@ -17,6 +22,7 @@ def get_node_availability():
     return jsonify(response), 200
 
 
+# Connecting to an existing peer node and cloing all its data whwn node initialization
 @app.route('/node/init', methods=['POST'])
 def init_node_from_peer():
     body = request.get_json()
@@ -49,6 +55,7 @@ def init_node_from_peer():
         return jsonify(response), 400
 
 
+# Return all node data
 @app.route('/node/clone', methods=['GET'])
 def get_node_replica():
     host_port = node.get_socket()
@@ -69,6 +76,11 @@ def get_node_replica():
 
 
 
+###################
+# P2P Peer APIs
+###################
+
+# Listing all connecting peer nodes
 @app.route('/peer/list', methods=['GET'])
 def get_node_peers():
     peers = node.get_peers()
@@ -78,6 +90,7 @@ def get_node_peers():
     return jsonify(response), 200
 
 
+# A node can register to join the P2P network as a new peer node
 @app.route('/peer/new', methods=['POST'])
 def post_peer_registration():
     body = request.get_json()
@@ -99,6 +112,7 @@ def post_peer_registration():
         return jsonify(response), 400
 
 
+# For broadcast a new added peer, notifying all peers to add peer
 @app.route('/peer/add', methods=['POST'])
 def add_new_peer():
     body = request.get_json()
@@ -121,6 +135,11 @@ def add_new_peer():
 
 
 
+###################
+# User APIs
+###################
+
+# Listing all users and password
 @app.route('/user/profiles', methods=['GET'])
 def get_all_user_profile():
     users = node.get_users()
@@ -130,6 +149,7 @@ def get_all_user_profile():
     return jsonify(response), 200
 
 
+# Listing all users
 @app.route('/user/names', methods=['GET'])
 def get_all_user_list():
     users = node.get_users()
@@ -139,6 +159,7 @@ def get_all_user_list():
     return jsonify(response), 200
 
 
+# A user can register to use e-wallet service and mining
 @app.route('/user/new', methods=['POST'])
 def post_user_registration():
     body = request.get_json()
@@ -160,6 +181,7 @@ def post_user_registration():
         return jsonify(response), 400
 
 
+# For broadcast a new registered user, notifying all peers to add this user
 @app.route('/user/add', methods=['POST'])
 def add_new_user():
     body = request.get_json()
@@ -181,6 +203,8 @@ def add_new_user():
         return jsonify(response), 201
 
 
+# A user can query its balence from uncommitted transactions (balence pool) 
+# and committed transactions (blockchain)
 @app.route('/user/balence', methods=['POST'])
 def get_user_balence():
     body = request.get_json()
@@ -207,6 +231,11 @@ def get_user_balence():
 
 
 
+#######################################
+# Transaction and Balence Pools APIs
+#######################################
+
+# List all users' uncommitted balence from balence pool
 @app.route('/balence/pool', methods=['GET'])
 def get_balence_pool():
     user_balence_pool = node.get_user_balence_pool()
@@ -216,7 +245,7 @@ def get_balence_pool():
     return jsonify(response), 200
 
 
-
+# List all uncommitted transactions from transaction pool
 @app.route('/transaction/pool', methods=['GET'])
 def get_transaction_pool():
     transaction_pool = node.get_transaction_pool()
@@ -226,6 +255,7 @@ def get_transaction_pool():
     return jsonify(response), 200
 
 
+# List all uncommitted transactions from transaction pool
 @app.route('/transaction/list', methods=['GET'])
 def get_uncommitted_transactions():
     uncommitted_transactions = node.get_transaction_pool_as_list()
@@ -235,6 +265,7 @@ def get_uncommitted_transactions():
     return jsonify(response), 200
 
 
+# A user can start a payment
 @app.route('/transaction/new', methods=['POST'])
 def post_user_transaction():
     body = request.get_json()
@@ -280,6 +311,7 @@ def post_user_transaction():
         return jsonify(response), 201
 
 
+# For broadcast a transaction, notifying all peers to add this transaction
 @app.route('/transaction/add', methods=['POST'])
 def add_new_transaction():
     body = request.get_json()
@@ -301,6 +333,11 @@ def add_new_transaction():
 
 
 
+###################
+# Blockchain APIs
+###################
+
+# List the full blockchain
 @app.route('/blockchain/chain', methods=['GET'])
 def get_full_blockchain():
     blockchain = node.get_full_chain()
@@ -311,6 +348,7 @@ def get_full_blockchain():
     return jsonify(response), 200
 
 
+# List the last adde block from blockchain
 @app.route('/blockchain/last_block', methods=['GET'])
 def get_last_block_blockchain():
     last_block = node.get_last_block()
@@ -320,6 +358,7 @@ def get_last_block_blockchain():
     return jsonify(response), 200
 
 
+# A user can mine a new block and commit transactions
 @app.route('/blockchain/mine', methods=['POST'])
 def mine_new_block():
     body = request.get_json()
@@ -352,6 +391,7 @@ def mine_new_block():
         return jsonify(response), 201
 
 
+# For broadcast a new block, notifying all peers about blockchain changes
 @app.route('/blockchain/add', methods=['POST'])
 def add_new_blockchain():
     body = request.get_json()
