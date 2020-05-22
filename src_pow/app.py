@@ -3,12 +3,10 @@ import config
 from flask import Flask, jsonify, request
 from node import Node
 import requests
-import threading
 import utility
 
 
 app = Flask(__name__)
-
 
 @app.route('/', methods=['GET'])
 def get_node_availability():
@@ -271,7 +269,7 @@ def post_user_transaction():
     transaction = node.start_transaction(sender=sender, recipient=recipient, amount=body.get('amount'))
     if transaction is None:
         response = {
-            'error': 'Nor enough balence or invalid recipient'
+            'error': 'No enough balence or invalid recipient'
         }
         return jsonify(response), 400
     else:
@@ -370,7 +368,7 @@ def add_new_blockchain():
         return jsonify(response), 201
     else:
         response = {
-            'message': 'Blockchain node not updated'
+            'message': 'Blockchain not updated'
         }
         return jsonify(response), 201
 
