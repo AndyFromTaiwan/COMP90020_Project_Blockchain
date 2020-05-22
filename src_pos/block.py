@@ -11,7 +11,6 @@ class Block(object):
         by calling its unique hash.
 
         Attributes:
-            # index (int): Block number. [meanless]
             timestamp (int): Block creation timestamp.
             transactions [dict{}]: Transactions to be sent.
             previous_hash(str): String representing previous block unique hash.
