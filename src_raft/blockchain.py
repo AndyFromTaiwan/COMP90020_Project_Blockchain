@@ -16,8 +16,6 @@ class Blockchain(object):
         self.chain.append(genesis_block)
 
 
-
-
     def get_chain(self):
         return self.chain
 

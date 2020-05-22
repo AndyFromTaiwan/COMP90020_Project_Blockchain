@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 import config
 from flask import Flask, jsonify, request
 from node import Node
-from multiprocessing import Process
 from raft import Raft
 import requests
 from threading import Thread
@@ -10,7 +9,6 @@ import utility
 
 
 app = Flask(__name__)
-
 
 @app.route('/', methods=['GET'])
 def get_node_availability():
@@ -41,7 +39,7 @@ def init_node_from_peer():
         if response.status_code == 201:
             node.peers.add(peer)
             if node.clone_from_peer(peer):
-                p_raft.start()
+                thread_raft.start()
                 response = {
                     'message': f'Successful initialization from http://{peer}'
                 }
@@ -253,12 +251,12 @@ def post_user_transaction():
     transaction = node.start_transaction(sender=sender, recipient=recipient, amount=body.get('amount'))
     if transaction is None:
         response = {
-            'error': 'Nor enough balence or invalid recipient'
+            'error': 'No enough balence or invalid recipient'
         }
         return jsonify(response), 400
     else:
         response = {
-            'message': 'Raft will review your transaction, please check later',
+            'message': 'Raft will handle your transaction, please check later!',
             'transaction': transaction
         }
         return jsonify(response), 201
@@ -325,6 +323,7 @@ def add_new_user():
             'error': 'Invalid request body'
         }
         return jsonify(response), 400
+    raft.handle_message(body)
 
     if body.get('type') == 'add_log':
         if node.add_user(user=body.get('username'), password=body.get('password')):
@@ -359,6 +358,7 @@ def add_new_transaction():
             'error': 'Invalid request body'
         }
         return jsonify(response), 400
+    raft.handle_message(body)
 
     if body.get('type') == 'add_log':
         if node.add_transaction(transaction=body.get('transaction')):
@@ -393,16 +393,17 @@ def add_new_blockchain():
             'error': 'Invalid request body'
         }
         return jsonify(response), 400
+    raft.handle_message(body)
 
     if body.get('type') == 'add_log':
         if node.add_chain(chain=body.get('blockchain')):
             response = {
-                'message': 'Update blockchain successfully!'
+                'message': 'Added blockchain change successfully!'
             }
             return jsonify(response), 201
         else:
             response = {
-                'message': 'Blockchain node not updated'
+                'message': 'Blockchain change not updated'
             }
             return jsonify(response), 200
 
@@ -422,21 +423,16 @@ def add_new_blockchain():
 
 @app.route('/raft/start', methods=['GET'])
 def start_raft():
-    p_raft.start()
+    thread_raft.start()
     response = {
-        'message': 'Raft process started'
+        'message': 'Raft thread started'
     }
     return jsonify(response), 200
 
 
 @app.route('/raft/status', methods=['GET'])
 def get_raft_status():
-    response = {
-        'role': raft.role,
-        'current_term': raft.current_term,
-        'commit_index': raft.commit_index,
-        'peers': raft.node.get_peers()
-    }
+    response = raft.get_status()
     return jsonify(response), 200
 
 
@@ -464,6 +460,6 @@ if __name__ == '__main__':
     node = Node(host=host, port=port)
     raft = Raft(node)
     node.set_raft(raft)
-    p_raft = Thread(target=raft.run, name='raft', daemon=True)
+    thread_raft = Thread(target=raft.run, name='raft', daemon=True)
 
     app.run(host=host, port=port, debug=debug)
