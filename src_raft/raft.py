@@ -34,6 +34,16 @@ class Raft(object):
         self.leader_message_types = { 'heartbeat', 'add_log', 'commit_log' }
 
 
+    def get_status(self):
+        return {
+            'role': self.role,
+            'leader': self.leader_id,
+            'current_term': self.current_term,
+            'commit_index': self.commit_index,
+            'peers': self.node.get_peers()
+        }
+
+
     def get_next_election_start(self):
         return time.time() + random.randint(*self.election_timeout_interval)/1000
 
@@ -106,7 +116,7 @@ class Raft(object):
                     self.leader_id = message['leader_id']
                     if self.commit_index < message['last_log_index']:
                         print('[FOLLOWER] Synchronizing with leader', self.leader_id)
-                        if self.clone_from_peer(self, self.leader_id):
+                        if self.node.clone_from_peer(self.leader_id):
                             self.commit_index = message['last_log_index']
                     if message['type'] == 'commit_log':
                         print('[FOLLOWER] Committing', message)
@@ -202,9 +212,9 @@ class Raft(object):
             elif message['type'] in self.client_message_types:
                 json = message.copy()
                 json['type'] = 'add_log'
-                json['src_id'] = self.id,
-                json['term'] = self.current_term,
-                json['leader_id'] = self.id,
+                json['src_id'] = self.id
+                json['term'] = self.current_term
+                json['leader_id'] = self.id
                 json['last_log_index'] = self.commit_index
                
                 agree_count = 0
@@ -247,7 +257,6 @@ class Raft(object):
                 self.start_an_iteration(message)
                 if self.role == 'follower':
                     self.act_as_a_follower(message)
-
                 if self.role == 'candidate':
                     self.act_as_a_candidate(message)
                 if self.role == 'leader':
@@ -256,4 +265,3 @@ class Raft(object):
             except Exception as e:
                 print(e)
                 traceback.print_tb(e.__traceback__)
-

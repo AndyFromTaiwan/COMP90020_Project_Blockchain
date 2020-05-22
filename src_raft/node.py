@@ -192,6 +192,7 @@ class Node(object):
             self.broadcast_chain(new_blockchain)
         return new_block
 
+
     def add_chain(self, chain):
         return self.blockchain.add_cahin(chain)
 
