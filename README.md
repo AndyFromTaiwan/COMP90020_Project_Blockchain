@@ -26,7 +26,6 @@ We are going to show the structure, setup and test of each algorithm.
 │   ├── transaction.py  
 │   └── wallet.py  
 
-***
 
 ## [Proof of Work](#pow)
 
@@ -39,7 +38,6 @@ We are going to show the structure, setup and test of each algorithm.
 │   ├── node.py  
 │   └── utility.py  
 
-***
 
 ## [Raft](#raft)
 
