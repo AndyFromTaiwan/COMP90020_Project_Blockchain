@@ -13,3 +13,5 @@ Each time when you want to open a new node:
 2. run `app.py` (-p argument to assign port)
 3. you can use Postman to interact with the enpoints
 4. remember to initialize node from endpoints if necessary
+ (e.g. synchronization with an existing node)
+ 
