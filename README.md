@@ -32,7 +32,7 @@ We are going to show the structure, setup and test of each algorithm.
 
 <h4> Introduction </h4>
 
-This application consists of the following class:
+This application consists of the following class, when the number of pending transactions reaches the threshhold, it will select the validator that has the max stakes t:
 - Block - block.py : 
     
     record transactions that have been executed
@@ -41,7 +41,7 @@ This application consists of the following class:
     record blocks and interact with stake, account and validator
 - Server - index.py : 
     
-    node that receive and process messages from user and other nodos
+    node that receive and process messages from user and other nodes
 - Stake - stake.py : 
     
     record the stake of each validators
@@ -70,10 +70,13 @@ This application consists of the following class:
 
 
 
-<h4> Run & Test </h4>
+<h4> Run </h4>
 
-To run the pos:
-1. 
+Each time when you want to open a new node:
+1. confirm the parameters in config.py 
+2. run index.py 
+3. run wallet 
+
 
 
 <h2 href=”#pow”>Proof of Work</h2>
