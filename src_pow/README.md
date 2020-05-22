@@ -8,7 +8,7 @@
 
 
 ### Execution
-
-'''
-Write the execution
-'''
+Each time when you want to open a new node:
+1. confirm the parameters in config.py 
+2. run `app.py` (-p to assign port)
+3. you can use Postman to interact with the enpoints
