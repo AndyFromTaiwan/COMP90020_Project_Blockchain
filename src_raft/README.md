@@ -7,7 +7,9 @@
 - `config.py` : basic configuration
 
 ### Execution
-
-'''
-Write the execution
-'''
+Each time when you want to open a new node:
+1. confirm the parameters in config.py 
+2. run `app.py` (-p argument to assign port)
+3. you can use Postman to interact with the enpoints
+4. remember to initialize node from endpoints if necessary
+   (e.g. start the raft thread or synchronization with an existing node)
