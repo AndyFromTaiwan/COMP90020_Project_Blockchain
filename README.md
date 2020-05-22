@@ -32,7 +32,7 @@ We are going to show the structure, setup and test of each algorithm.
 
 <h4> Introduction </h4>
 
-This application is made of the following class:
+This application consists of the following class:
 - Block - block.py : 
     
     record transactions that have been executed
@@ -70,10 +70,10 @@ This application is made of the following class:
 
 
 
-<h4> Congifuration </h4>
-
-
 <h4> Run & Test </h4>
+
+To run the pos:
+1. 
 
 
 <h2 href=”#pow”>Proof of Work</h2>
@@ -88,7 +88,7 @@ This application is made of the following class:
 │   └── utility.py  
 
 
-<h2 href=”#pow”>Raft</h2>
+<h2 href=”#raft”>Raft</h2>
 
 <h4> Structure </h4>
 
