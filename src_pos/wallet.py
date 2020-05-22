@@ -7,7 +7,7 @@ import pickle
 
 # User that operates on the server.
 class Wallet(object):
-    def __init__(self, pubKey=None, priKey = None):
+    def __init__(self, pubKey=None, priKey=None):
         self.balance = 0
         if pubKey and priKey:
             self.publicKey = pubKey
@@ -17,14 +17,13 @@ class Wallet(object):
 
     def __str__(self):
         return "Wallet -" \
-               "publicKey: " + str(self.publicKey)+\
+               "publicKey: " + str(self.publicKey) + \
                "balance: " + str(self.balance)
 
     def changeWallet(self, pubKey, priKey):
         self.balance = 0
         self.publicKey = pubKey
         self.privateKey = priKey
-
 
     @staticmethod
     def generate_ECDSA_keys():
@@ -35,11 +34,11 @@ class Wallet(object):
         private_key: str
         public_ley: base64 (to make it shorter)
         """
-        sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1) #this is your sign (private key)
-        private_key = sk.to_string().hex() #convert your private key to hex
-        vk = sk.get_verifying_key() #this is your verification key (public key)
+        sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)  # this is your sign (private key)
+        private_key = sk.to_string().hex()  # convert your private key to hex
+        vk = sk.get_verifying_key()  # this is your verification key (public key)
         public_key = vk.to_string().hex()
-        #we are going to encode the public key to make it shorter
+        # we are going to encode the public key to make it shorter
         public_key = base64.b64encode(bytes.fromhex(public_key))
 
         filename = input("Please enter the file name to store your key: ") + ".txt"
@@ -150,7 +149,8 @@ def control_panel():
                 print("Invalid Input! Must be Integer. Please try again.")
                 continue
             print("Is everything correct?\n")
-            print("From: {0}\nPrivate Key: {1}\nTo: {2}\nAmount: {3}\n".format(wallet.publicKey, wallet.privateKey, addr_to, amount))
+            print("From: {0}\nPrivate Key: {1}\nTo: {2}\nAmount: {3}\n".format(wallet.publicKey, wallet.privateKey,
+                                                                               addr_to, amount))
             response = input("y/n\n")
             if response.lower() == "y":
                 create_transaction(addr_to, amount, "transaction")
@@ -189,12 +189,14 @@ def check_peers():
     print(res.text)
     print("==========================================================\n")
 
+
 def check_all_balance():
     url = config.HOSTPORT + "/balance"
     res = requests.get(url)
     print("=================== All Account Balance ======================\n")
     print(res.text)
     print("==========================================================\n")
+
 
 def check_user_block_transactions(publicKey):
     url = config.HOSTPORT + "/user/transaction"
@@ -223,8 +225,9 @@ def check_block_transactions():
             print(t)
     print("====================================================================\n")
 
+
 def create_transaction(to, amount, type):
-    url = config.HOSTPORT+"/new_transaction"
+    url = config.HOSTPORT + "/new_transaction"
     payload = {
         "to": to,
         "amount": amount,
@@ -237,6 +240,7 @@ def create_transaction(to, amount, type):
     else:
         print(res.text)
     return res.status_code
+
 
 def add_stake():
     url = config.HOSTPORT + "/user/stake"
@@ -254,13 +258,13 @@ def add_stake():
             print("Invalid Input! Please try again.")
 
 
-
 def check_account_balance():
     url = config.HOSTPORT + "/user/balance"
     res = requests.get(url)
     print("=================== Account Balance ======================\n")
     print(res.text)
     print("==========================================================\n")
+
 
 def check_transactions():
     """Retrieve the entire blockchain. With this you can check your
@@ -277,13 +281,14 @@ def check_transactions():
             print(transaction)
     print("==================================================================\n")
 
+
 def send_login_request(publicKey, privateKey):
     if len(privateKey) == 64:
         wallet = Wallet(publicKey, privateKey)
         signature = wallet.sign_ECDSA_msg("")
         isValid = wallet.validate_signature(publicKey, signature, "")
         if isValid:
-            url = config.HOSTPORT +"/login"
+            url = config.HOSTPORT + "/login"
             payload = {"publicKey": publicKey,
                        "privateKey": privateKey}
             headers = {"Content-Type": "application/json"}

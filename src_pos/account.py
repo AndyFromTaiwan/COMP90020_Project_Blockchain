@@ -1,4 +1,6 @@
-
+"""
+Record and maintain the balance of each user
+"""
 class Account(object):
     def __init__(self):
         # self.addresses = []

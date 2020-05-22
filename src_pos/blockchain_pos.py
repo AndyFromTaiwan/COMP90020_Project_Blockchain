@@ -2,18 +2,19 @@ from config import TRANSACTION_TYPE
 from account import Account
 from block import Block
 from stake import Stake, Validators
-from wallet import Wallet
 
 
 class Blockchain(object):
+    """
+    It records blocks and interacts with stake, account and validator
+    """
     def __init__(self):
         # The maintained blockchain
         self.chain = [Block.genesis()]
         self.stakes = Stake()
         self.accounts = Account()
         self.validators = Validators()
-    #
-    # def toDict(self):
+
 
     """
     It's called by node adding the new block.
@@ -76,7 +77,9 @@ class Blockchain(object):
             self.executeTransaction(block)
             return True
         return False
-
+    """
+    When the number of pending transactions reach the theshold, it generate the block and execute the transaction.
+    """
     def executeTransaction(self, block):
         for transaction in block.transactions:
             # type == "stake"

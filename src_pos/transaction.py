@@ -7,6 +7,7 @@ from src_pos.wallet import Wallet
 from config import TRANSACTION_THRESHOLD
 
 """
+Structure of transaction: 
 {
   id: <here goes some identifier>
   type: <transactions type: stake,validator,transaction>

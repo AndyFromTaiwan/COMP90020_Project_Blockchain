@@ -9,7 +9,7 @@ import pickle
 transactionPool = TransactionPool()
 blockchain = Blockchain()
 
-wallet = Wallet("1","1")
+wallet = Wallet("1", "1")
 # During initialization, query the node state from peers. If no response, initialize your own state.
 node = Node(config.HOST, config.PORT, blockchain)
 for p in node.peers:
@@ -23,19 +23,23 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def get_node_availability():
+    """
+    It receives and process messages from user and other nodes
+    """
     host_port = node.get_socket()
     response = {
         'message': f'Node on http://{host_port} is available!'
     }
     return jsonify(response), 200
 
-"""
-Process register node request from other peers：
-1. if it's a valid node, return whole node info to it.
-2. add peer to the node peer list
-"""
+
 @app.route('/node/init', methods=['POST'])
 def process_init_node_from_peer():
+    """
+    Process register node request from other peers：
+    1. if it's a valid node, return whole node info to it.
+    2. add peer to the node peer list
+    """
     body = request.get_json()
     if body is None or body.get('peer') is None:
         response = {
@@ -62,11 +66,12 @@ def process_init_node_from_peer():
         }
         return jsonify(response), 400
 
-"""
-Exchange connected peer information
-"""
+
 @app.route('/peer/new', methods=['POST'])
 def post_peer_registration():
+    """
+    Exchange connected peer information
+    """
     body = request.get_json()
     if body is None or body.get('peer') is None:
         response = {
@@ -99,11 +104,12 @@ def get_node_peers():
     return jsonify(response), 200
 
 
-"""
-You must enter the right key, otherwise error will occur when you try to create a new transaction
-"""
+
 @app.route('/login', methods=['POST'])
 def generate_Wallet():
+    """
+    You must enter the right key, otherwise error will occur when you try to create a new transaction
+    """
     values = request.get_json()
     required = ["publicKey", "privateKey"]
     if not all(k in values for k in required):
@@ -111,21 +117,29 @@ def generate_Wallet():
     wallet.changeWallet(values["publicKey"], values["privateKey"])
     return "Login successfully", 200
 
+
 @app.route('/chain', methods=['GET'])
 def show_chain():
+    """
+    Query the whole chain of the system.
+    """
     return pickle.dumps(blockchain.chain), 200
 
 
 @app.route('/transactions', methods=['GET'])
 def show_all_transactions():
+    """
+    Query the pending transaction that have not been executed.
+    """
     o = pickle.dumps(transactionPool.transactions)
     return o, 200
 
-"""
-call from wallet
-"""
+
 @app.route('/new_transaction', methods=['POST'])
 def new_transactions():
+    """
+    Create new transaction call from wallet.
+    """
     values = request.get_json()
 
     # Check that the required fields are in the POST'ed data
@@ -150,11 +164,12 @@ def new_transactions():
         node.broadcast_block(block)
     return redirect('/transactions')
 
-"""
-call from other node
-"""
+
 @app.route('/add_transaction', methods=['POST'])
 def add_transaction():
+    """
+    Add transaction call from other node
+    """
     transaction = pickle.loads(request.data)
     if not transactionPool.transactionExists(transaction):
         threshholdReached = transactionPool.addTransaction(transaction)
@@ -171,57 +186,64 @@ def add_transaction():
     return "Transaction exists", 200
 
 
-"""
-call from other node
-"""
 @app.route('/add_block', methods=['POST'])
 def add_block():
+    """
+    Add block request call from other node
+    """
     block = pickle.loads(request.data)
     if blockchain.valid_block(block):
         node.broadcast_block(block)
         transactionPool.clear()
 
 
-"""
-call from other node
-"""
 @app.route('/replace_chain', methods=['POST'])
 def replace_chain():
+    """
+    Receive chain from other node
+    """
     chain = pickle.loads(request.data)
     blockchain.resolve_conflicts(chain)
 
 
-
 @app.route('/isValidator', methods=['GET'])
 def is_Validator():
+    """
+    Check it the user is a validator
+    """
     response = "False"
     if wallet.publicKey in blockchain.validators.list:
         response = "True"
     return response, 200
 
+
 @app.route('/validatorsAndStake', methods=['GET'])
 def check_validators_and_stake():
+    """
+    Check the current stake.
+    """
     response = {}
     for v in blockchain.validators.list:
         response[v] = blockchain.stakes.balance[v]
     return jsonify(response), 200
 
-# @app.route('/create_block', methods=['GET'])
-# def create_block():
-#     blockchain.create_block(transactionPool.transactions)
-#     node.broadcast_chain(blockchain.chain)
-#     return "block created and broadcast", 200
-
 
 @app.route('/user', methods=['GET'])
 def show_public_key():
+    """
+    Show the current login user
+    """
     response = {
         'user': wallet.publicKey
     }
     return jsonify(response), 200
 
+
 @app.route('/user/transaction', methods=['GET'])
 def show_user_transaction():
+    """
+    Check user transaction that has been executed.
+    """
     temp_transaction = []
     for block in blockchain.chain:
         for t in block.transactions:
@@ -233,15 +255,20 @@ def show_user_transaction():
 
 @app.route('/user/balance', methods=['GET'])
 def show_user_balance():
+    """
+    Check user's balance
+    """
     response = {
         "balance": blockchain.getBalance(wallet.publicKey)
     }
     return jsonify(response), 200
 
+
 @app.route('/balance', methods=['GET'])
 def show_all_balance():
     response = blockchain.accounts.balance
     return jsonify(response), 200
+
 
 @app.route('/user/stake', methods=['GET'])
 def show_user_stake():
@@ -250,8 +277,6 @@ def show_user_stake():
     }
     return jsonify(response), 200
 
+
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=config.PORT)
-
-
-

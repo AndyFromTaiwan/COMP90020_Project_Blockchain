@@ -1,5 +1,7 @@
-
 class Stake(object):
+    """
+    Record the stake of each validators and maintain the validator list
+    """
     def __init__(self):
         # self.addresses = []
         # self.balance = {}
@@ -18,6 +20,10 @@ class Stake(object):
     def getStake(self, address):
         self.initialize(address)
         return self.balance[address]
+
+    """
+    Get leader from stake list
+    """
 
     def getMax(self, addresses):
         balance = -1
@@ -39,6 +45,9 @@ class Stake(object):
 
 
 class Validators(object):
+    """
+    Users must register to become validators.
+    """
     def __init__(self):
         self.list = ["kHdwGTsh3TiS6CDUjnw8E9mtOpGQkKoD+ODj+XaWnpg/pYriRUkP4bXUZdvkt7cHYOzlaJLFRrGIakrfTuT2kA=="]
 

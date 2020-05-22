@@ -2,8 +2,9 @@ import config
 import requests
 import pickle
 
-# TODO all broadcast functions
+
 class Node(object):
+
     def __init__(self, host, port, blockchain):
         self.blockchain = blockchain
         self.peers = set(config.INIT_PEERS)
@@ -28,8 +29,6 @@ class Node(object):
         except Exception as e:
             print(e)
         return False
-
-
 
     def get_peers(self):
        return list(self.peers)
