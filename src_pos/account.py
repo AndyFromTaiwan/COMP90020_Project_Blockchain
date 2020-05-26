@@ -14,15 +14,15 @@ class Account(object):
             self.addresses.append(address)
 
     def transfer(self, _from, to, amount):
-        self.initialize(_from)
-        self.initialize(to)
         self.increment(to, amount)
         self.decrement(_from, amount)
 
     def increment(self, to, amount):
+        self.initialize(to)
         self.balance[to] += amount
 
     def decrement(self, _from, amount):
+        self.initialize(_from)
         self.balance[_from] -= amount
 
     def getBalance(self, address):

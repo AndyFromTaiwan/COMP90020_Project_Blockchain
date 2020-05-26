@@ -64,9 +64,10 @@ class Wallet(object):
 
     def createTransaction(self, to, amount, type, blockchain, transactionPool):
         self.balance = blockchain.getBalance(self.publicKey)
+
         if amount > self.balance:
             print("Not enough money")
-            return
+            return False
         from transaction import Transaction
         transaction = Transaction.new_transaction(self, to, amount, type)
         transactionPool.addTransaction(transaction)
@@ -219,6 +220,7 @@ def check_block_transactions():
     print("block length:")
     print(len(chain))
     for block in chain:
+        print("validator: " + str(block.validator))
         print("transaction length:")
         print(len(block.transactions))
         for t in block.transactions:

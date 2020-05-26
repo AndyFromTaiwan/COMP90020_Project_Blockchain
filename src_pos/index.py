@@ -2,7 +2,7 @@ import config
 from blockchain_pos import Blockchain
 from transaction import TransactionPool
 from flask import Flask, jsonify, request, redirect
-from src_pos.wallet import Wallet
+from wallet import Wallet
 from server import Node
 import pickle
 
@@ -67,12 +67,13 @@ def process_init_node_from_peer():
         return jsonify(response), 400
 
 
-@app.route('/peer/new', methods=['POST'])
+@app.route('/peer/add', methods=['POST'])
 def post_peer_registration():
     """
     Exchange connected peer information
     """
     body = request.get_json()
+    print(body)
     if body is None or body.get('peer') is None:
         response = {
             'error': 'Invalid request body'
@@ -81,18 +82,16 @@ def post_peer_registration():
 
     p = body.get('peer')
     if p not in node.peers:
-        if node.register_peer(peer=p):
-            response = {
-                'message': 'Your peer registration is successful!'
-            }
-            return jsonify(response), 201
-        else:
-            response = {
-                'error': 'Failed to access this peer node'
-            }
-            return jsonify(response), 400
+        node.add_peer(peer=p)
+        response = {
+            'message': 'Your peer registration is successful!'
+        }
+        return jsonify(response), 201
     else:
-        return {"message": "Already have this node!"}, 200
+        response = {
+            "message": "Already have this node!"
+        }
+        return jsonify(response), 200
 
 
 @app.route('/peer/list', methods=['GET'])
@@ -155,6 +154,8 @@ def new_transactions():
         blockchain,
         transactionPool
     )
+    if not transaction:
+        return "Insufficient balance!", 403
     node.broadcast_transaction(transaction)
     if len(transactionPool.transactions) >= config.TRANSACTION_THRESHOLD and blockchain.getLeader() == wallet.publicKey:
         block = blockchain.create_block(transactionPool.transactions, wallet)
@@ -171,7 +172,7 @@ def add_transaction():
     Add transaction call from other node
     """
     transaction = pickle.loads(request.data)
-    if not transactionPool.transactionExists(transaction):
+    if not transactionPool.transactionExists(transaction) and not blockchain.isExistTransaction(transaction):
         threshholdReached = transactionPool.addTransaction(transaction)
         node.broadcast_transaction(transaction)
         if threshholdReached:
@@ -195,6 +196,8 @@ def add_block():
     if blockchain.valid_block(block):
         node.broadcast_block(block)
         transactionPool.clear()
+        return "Block added", 201
+    return "Invalid Block", 200
 
 
 @app.route('/replace_chain', methods=['POST'])
@@ -204,6 +207,7 @@ def replace_chain():
     """
     chain = pickle.loads(request.data)
     blockchain.resolve_conflicts(chain)
+    return "Chain received", 200
 
 
 @app.route('/isValidator', methods=['GET'])

@@ -46,6 +46,11 @@ class Block(object):
     def __eq__(self, other):
         return self.hash == other.hash and self.previous_hash == other.previous_hash and self.validator == other.validator
 
+    def isTransactionExist(self, transaction):
+        if transaction in self.transactions:
+            return True
+        return False
+
     @staticmethod
     def createBlock(lastBlock, transactions, wallet):
         timestamp = time()
@@ -88,4 +93,5 @@ class Block(object):
     @staticmethod
     def verifyLeader(block, leader):
         return block.validator == leader
+
 

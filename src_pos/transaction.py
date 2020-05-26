@@ -3,7 +3,7 @@ from uuid import uuid4
 import json
 import hashlib
 from config import TRANSACTION_FEE
-from src_pos.wallet import Wallet
+from wallet import Wallet
 from config import TRANSACTION_THRESHOLD
 
 """
@@ -42,6 +42,8 @@ class Transaction(object):
                 ", fee: " + str(self.output["fee"]) + "}"
         return "{\n"+id+"\n"+type+"\n" + input + "\n" + output + "\n}"
 
+    def __eq__(self, other):
+        return self.id == other.id
 
     @staticmethod
     def new_transaction(senderWallet, to, amount, type):

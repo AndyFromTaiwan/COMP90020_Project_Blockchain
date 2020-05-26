@@ -20,7 +20,7 @@ INIT_PEERS = []
 # Transaction fee
 TRANSACTION_FEE = 0
 
-TRANSACTION_THRESHOLD = 2
+TRANSACTION_THRESHOLD = 1
 
 TRANSACTION_TYPE = ["stake", "validator", "transaction"]
 

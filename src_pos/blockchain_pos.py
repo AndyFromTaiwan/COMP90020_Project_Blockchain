@@ -117,5 +117,10 @@ class Blockchain(object):
         self.accounts = Account()
         self.validators = Validators()
 
+    def isExistTransaction(self, transaction):
+        for block in self.chain:
+            if block.isTransactionExist(transaction):
+                return True
+        return False
 
 
