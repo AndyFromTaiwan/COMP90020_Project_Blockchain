@@ -118,7 +118,8 @@ def control_panel():
             break
 
     while True:
-        response = input(f"""What do you want to do?
+        response = input(f"""User: {wallet.publicKey}
+                    What do you want to do?
                     1. Become validator and add stake 
                     2. Send coins to another wallet (TRANSACTION_FEE = {config.TRANSACTION_FEE})
                     3. Check all pending transactions
