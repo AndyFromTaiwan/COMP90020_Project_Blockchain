@@ -192,6 +192,7 @@ class Raft(object):
 
 
     def act_as_a_leader(self, message):
+        self.leader_id = self.id
         t = time.time()
         # Upon election heartbeat to each server; repeat during idle periods to prevent election timeouts
         if t > self.next_heartbeat_time or (message is not None and message['type'] == 'vote_request'):

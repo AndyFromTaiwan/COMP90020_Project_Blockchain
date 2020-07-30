@@ -62,14 +62,14 @@ def get_node_replica():
     peers = node.get_peers()
     users = node.get_users()
     transaction_pool = node.get_transaction_pool()
-    user_balence_pool = node.get_user_balence_pool()
+    user_balance_pool = node.get_user_balance_pool()
     blockchain = node.get_full_chain()
     response = {
         'host_port': host_port,
         'peers': peers,
         'users': users,
         'transaction_pool': transaction_pool,
-        'user_balence_pool': user_balence_pool,
+        'user_balance_pool': user_balance_pool,
         'blockchain': blockchain
     }
     return jsonify(response), 200
@@ -203,10 +203,10 @@ def add_new_user():
         return jsonify(response), 201
 
 
-# A user can query its balence from uncommitted transactions (balence pool) 
+# A user can query its balance from uncommitted transactions (balance pool) 
 # and committed transactions (blockchain)
-@app.route('/user/balence', methods=['POST'])
-def get_user_balence():
+@app.route('/user/balance', methods=['POST'])
+def get_user_balance():
     body = request.get_json()
     if body is None or body.get('username') is None or body.get('password') is None:
         response = {
@@ -221,11 +221,11 @@ def get_user_balence():
         }
         return jsonify(response), 401
 
-    balence_from_blockchain = node.get_committed_user_balences().get(user)
-    balence_from_pool = node.get_user_balence_pool().get(user)
+    balance_from_blockchain = node.get_committed_user_balances().get(user)
+    balance_from_pool = node.get_user_balance_pool().get(user)
     response = {
-        'balence_from_blockchain': balence_from_blockchain,
-        'balence_from_pool': balence_from_pool
+        'balance_from_blockchain': balance_from_blockchain,
+        'balance_from_pool': balance_from_pool
     }
     return jsonify(response), 200
 
@@ -235,12 +235,12 @@ def get_user_balence():
 # Transaction and Balence Pools APIs
 #######################################
 
-# List all users' uncommitted balence from balence pool
-@app.route('/balence/pool', methods=['GET'])
-def get_balence_pool():
-    user_balence_pool = node.get_user_balence_pool()
+# List all users' uncommitted balance from balance pool
+@app.route('/balance/pool', methods=['GET'])
+def get_balance_pool():
+    user_balance_pool = node.get_user_balance_pool()
     response = {
-        'user_balence_pool': user_balence_pool
+        'user_balance_pool': user_balance_pool
     }
     return jsonify(response), 200
 
@@ -300,7 +300,7 @@ def post_user_transaction():
     transaction = node.start_transaction(sender=sender, recipient=recipient, amount=body.get('amount'))
     if transaction is None:
         response = {
-            'error': 'No enough balence or invalid recipient'
+            'error': 'No enough balance or invalid recipient'
         }
         return jsonify(response), 400
     else:

@@ -11,7 +11,7 @@ class Blockchain(object):
         self.node = node
         self.chain = []
         # Raft: for uncommited changes
-        self.uncommitted_user_balence_pool = dict()
+        self.uncommitted_user_balance_pool = dict()
         self.uncommitted_chain = None
         genesis_block = self.create_new_block()
         self.chain.append(genesis_block)
@@ -23,8 +23,8 @@ class Blockchain(object):
     def get_last_block(self):
         return self.chain[-1];
 
-    def get_committed_user_balences(self):
-        return self.chain[-1].get('user_balences').copy()
+    def get_committed_user_balances(self):
+        return self.chain[-1].get('user_balances').copy()
 
     def set_chain(self, chain):
         self.chain = chain
@@ -41,7 +41,7 @@ class Blockchain(object):
         if miner is not None:
             transactions.append(self.create_mining_reward(miner))
             transactions += self.node.get_transaction_pool_as_list()
-        user_balences = self.uncommitted_user_balence_pool
+        user_balances = self.uncommitted_user_balance_pool
         previous_block_hash = self.hash(self.get_last_block()) if len(self.chain)>0 else None
 
         block = {
@@ -49,7 +49,7 @@ class Blockchain(object):
             'previous_block_hash': previous_block_hash,
             'timestamp': int(time()),
             'transactions': transactions,
-            'user_balences': user_balences
+            'user_balances': user_balances
         }
         return block
 
@@ -57,8 +57,8 @@ class Blockchain(object):
     # Mining a new block and committing all transactions
     def mine(self, miner):
         # Stores uncomitted changes
-        self.uncommitted_user_balence_pool = self.node.user_balence_pool.copy()
-        self.uncommitted_user_balence_pool[miner] += config.MINING_REWARD
+        self.uncommitted_user_balance_pool = self.node.user_balance_pool.copy()
+        self.uncommitted_user_balance_pool[miner] += config.MINING_REWARD
         candidate_block = self.create_new_block(miner)
         return candidate_block
 
@@ -101,11 +101,11 @@ class Blockchain(object):
 
     # Committing all changes on blockchain and updatig all status
     def commit_chain(self):
-        if self.uncommitted_user_balence_pool is not None and self.uncommitted_chain is not None:
+        if self.uncommitted_user_balance_pool is not None and self.uncommitted_chain is not None:
             self.chain = self.uncommitted_chain
             self.node.reset_transaction_pool()
-            self.node.user_balence_pool = self.get_committed_user_balences()
-            self.uncommitted_user_balence_pool = dict()
+            self.node.user_balance_pool = self.get_committed_user_balances()
+            self.uncommitted_user_balance_pool = dict()
             self.uncommitted_chain = None
             return True
         return False

@@ -12,7 +12,7 @@ class Node(object):
         self.peers = set()
         self.users = dict()
         self.transaction_pool = dict()
-        self.user_balence_pool = dict()
+        self.user_balance_pool = dict()
         self.blockchain = Blockchain(self)
         # Raft
         self.raft = None
@@ -43,7 +43,7 @@ class Node(object):
                     self.add_peer(p)
                 self.users = replica.get('users')
                 self.transaction_pool = replica.get('transaction_pool')
-                self.user_balence_pool = replica.get('user_balence_pool')
+                self.user_balance_pool = replica.get('user_balance_pool')
                 self.blockchain.set_chain(replica.get('blockchain'))
                 return True
         except Exception as e:
@@ -109,7 +109,7 @@ class Node(object):
             user = self.uncommitted_user[0]
             password = self.uncommitted_user[1]
             self.users[user] = password
-            self.user_balence_pool[user] = config.NEW_USER_REWARD
+            self.user_balance_pool[user] = config.NEW_USER_REWARD
             self.uncommitted_user = None
             return True
         return False
@@ -161,7 +161,7 @@ class Node(object):
             recipient = self.uncommitted_transaction.get('recipient')
             amount = self.uncommitted_transaction.get('amount')
             self.transaction_pool[transaction_id] = self.uncommitted_transaction
-            self.update_user_balence_pool(sender, recipient, amount)
+            self.update_user_balance_pool(sender, recipient, amount)
             self.uncommitted_transaction = None
             return True
         return False
@@ -172,9 +172,9 @@ class Node(object):
 
 
     def verify_transaction(self, sender, recipient, amount):
-       if self.user_balence_pool.get(sender) is None or self.user_balence_pool.get(recipient) is None:
+       if self.user_balance_pool.get(sender) is None or self.user_balance_pool.get(recipient) is None:
           return False
-       return self.user_balence_pool.get(sender) >= amount
+       return self.user_balance_pool.get(sender) >= amount
 
     @staticmethod
     def create_transaction(sender, amount, recipient):
@@ -187,12 +187,12 @@ class Node(object):
         }
 
 
-    def get_user_balence_pool(self):
-        return self.user_balence_pool
+    def get_user_balance_pool(self):
+        return self.user_balance_pool
 
-    def update_user_balence_pool(self, sender, recipient, amount):
-        self.user_balence_pool[sender] = self.user_balence_pool.get(sender) - amount
-        self.user_balence_pool[recipient] = self.user_balence_pool.get(recipient) + amount
+    def update_user_balance_pool(self, sender, recipient, amount):
+        self.user_balance_pool[sender] = self.user_balance_pool.get(sender) - amount
+        self.user_balance_pool[recipient] = self.user_balance_pool.get(recipient) + amount
 
 
     ###############
@@ -205,8 +205,8 @@ class Node(object):
     def get_last_block(self):
         return self.blockchain.get_last_block()
 
-    def get_committed_user_balences(self):
-        return self.blockchain.get_committed_user_balences()
+    def get_committed_user_balances(self):
+        return self.blockchain.get_committed_user_balances()
 
     def mine(self, miner):
         new_block = self.blockchain.mine(miner)

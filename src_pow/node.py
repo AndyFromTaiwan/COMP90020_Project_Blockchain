@@ -12,7 +12,7 @@ class Node(object):
         self.peers = set()
         self.users = dict()
         self.transaction_pool = dict()
-        self.user_balence_pool = dict()
+        self.user_balance_pool = dict()
         self.blockchain = Blockchain(self)
         # broadcast_ methods: for broadcast changes by sending message to peers
         # add_* methods: for verifying and adding broadcasted changes
@@ -35,7 +35,7 @@ class Node(object):
                     self.add_peer(p)
                 self.users = replica.get('users')
                 self.transaction_pool = replica.get('transaction_pool')
-                self.user_balence_pool = replica.get('user_balence_pool')
+                self.user_balance_pool = replica.get('user_balance_pool')
                 self.blockchain.set_chain(replica.get('blockchain'))
                 return True
         except Exception as e:
@@ -94,7 +94,7 @@ class Node(object):
     def add_user(self, user, password):
         if user not in self.users:
             self.users[user] = password
-            self.user_balence_pool[user] = config.NEW_USER_REWARD
+            self.user_balance_pool[user] = config.NEW_USER_REWARD
             return True
         return False
 
@@ -127,7 +127,7 @@ class Node(object):
         if self.verify_transaction(sender, recipient, amount):
             transaction = self.create_transaction(sender, amount, recipient)
             self.transaction_pool[transaction.get('transaction_id')] = transaction
-            self.update_user_balence_pool(sender, recipient, amount)
+            self.update_user_balance_pool(sender, recipient, amount)
             self.broadcast_transaction(transaction)
             return transaction
         else:
@@ -140,14 +140,14 @@ class Node(object):
         amount = transaction.get('amount')
         if self.verify_transaction(sender, recipient, amount):
             self.transaction_pool[transaction_id] = transaction  
-            self.update_user_balence_pool(sender, recipient, amount)
+            self.update_user_balance_pool(sender, recipient, amount)
             return True
         return False
 
     def verify_transaction(self, sender, recipient, amount):
-       if self.user_balence_pool.get(sender) is None or self.user_balence_pool.get(recipient) is None:
+       if self.user_balance_pool.get(sender) is None or self.user_balance_pool.get(recipient) is None:
           return False
-       return self.user_balence_pool.get(sender) >= amount
+       return self.user_balance_pool.get(sender) >= amount
 
     @staticmethod
     def create_transaction(sender, amount, recipient):
@@ -168,12 +168,12 @@ class Node(object):
                 print(e)
 
 
-    def get_user_balence_pool(self):
-        return self.user_balence_pool
+    def get_user_balance_pool(self):
+        return self.user_balance_pool
 
-    def update_user_balence_pool(self, sender, recipient, amount):
-        self.user_balence_pool[sender] = self.user_balence_pool.get(sender) - amount
-        self.user_balence_pool[recipient] = self.user_balence_pool.get(recipient) + amount
+    def update_user_balance_pool(self, sender, recipient, amount):
+        self.user_balance_pool[sender] = self.user_balance_pool.get(sender) - amount
+        self.user_balance_pool[recipient] = self.user_balance_pool.get(recipient) + amount
 
 
     ###############
@@ -186,8 +186,8 @@ class Node(object):
     def get_last_block(self):
         return self.blockchain.get_last_block()
 
-    def get_committed_user_balences(self):
-        return self.blockchain.get_committed_user_balences()
+    def get_committed_user_balances(self):
+        return self.blockchain.get_committed_user_balances()
 
     def mine(self, miner):
         new_block = self.blockchain.mine(miner)

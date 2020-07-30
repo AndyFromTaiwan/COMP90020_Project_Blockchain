@@ -21,8 +21,8 @@ class Blockchain(object):
     def get_last_block(self):
         return self.chain[-1];
 
-    def get_committed_user_balences(self):
-        return self.chain[-1].get('user_balences').copy()
+    def get_committed_user_balances(self):
+        return self.chain[-1].get('user_balances').copy()
 
     def set_chain(self, chain):
         self.chain = chain
@@ -39,7 +39,7 @@ class Blockchain(object):
         if miner is not None:
             transactions.append(self.create_mining_reward(miner))
             transactions += self.node.get_transaction_pool_as_list()
-        user_balences = self.node.user_balence_pool.copy()
+        user_balances = self.node.user_balance_pool.copy()
         previous_block_hash = self.hash(self.get_last_block()) if len(self.chain)>0 else None
 
         block = {
@@ -47,7 +47,7 @@ class Blockchain(object):
             'previous_block_hash': previous_block_hash,
             'timestamp': int(time()),
             'transactions': transactions,
-            'user_balences': user_balences,
+            'user_balances': user_balances,
             'nonce': 0,
             'target_bits': config.TARGET_BITS
         }
@@ -57,7 +57,7 @@ class Blockchain(object):
     # Proof of work algorithm: A block is mined until SHA256 hash 
     # of this block matching target bits
     def mine(self, miner):
-        self.node.user_balence_pool[miner] += config.MINING_REWARD
+        self.node.user_balance_pool[miner] += config.MINING_REWARD
         candidate_block = self.create_new_block(miner)
 
         # Proof of work: Mining a block by adjusting the nonce parameter
@@ -110,7 +110,7 @@ class Blockchain(object):
         elif self.verify_chain(chain):
             self.chain = chain
             self.node.reset_transaction_pool()
-            self.node.user_balence_pool = self.get_committed_user_balences()
+            self.node.user_balance_pool = self.get_committed_user_balances()
             return True
         return False
 
@@ -119,6 +119,6 @@ class Blockchain(object):
         if block.get('index') == len(self.chain) and self.verify_block(block):
             self.chain.append(block)
             self.node.reset_transaction_pool()
-            self.node.user_balence_pool = self.get_committed_user_balences()
+            self.node.user_balance_pool = self.get_committed_user_balances()
             return True
         return False
